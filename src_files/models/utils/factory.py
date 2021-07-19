@@ -1,5 +1,6 @@
 import torch
 import timm
+from pytorchcv.model_provider import get_model as ptcv_get_model
 
 from ..ofa.model_zoo import ofa_flops_595m_s
 from ..tresnet import TResnetM, TResnetL
@@ -47,6 +48,8 @@ def create_model(args):
                                                                           num_classes=args.num_classes, **model_kwargs)
     elif args.model_name == 'mobilenetv3_large_100':
         model = timm.create_model('mobilenetv3_large_100', pretrained=False, num_classes=args.num_classes)
+    elif args.model_name == 'mobilenetv2_w1':
+        model = ptcv_get_model('mobilenetv2_w1', pretrained=False, num_classes=args.num_classes)
     else:
         print("model: {} not found !!".format(args.model_name))
         exit(-1)
