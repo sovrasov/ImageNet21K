@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description='PyTorch ImageNet21K Semantic Softm
 parser.add_argument('--data_path', type=str)
 parser.add_argument('--lr', default=3e-4, type=float)
 parser.add_argument('--model_name', default='tresnet_m')
-parser.add_argument('--model_path', default='./tresnet_m.pth', type=str)
+parser.add_argument('--model_path', default='', type=str)
 parser.add_argument('--num_workers', default=8, type=int)
 parser.add_argument('--image_size', default=224, type=int)
 parser.add_argument('--num_classes', default=11221, type=int)
