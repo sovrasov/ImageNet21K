@@ -1,6 +1,9 @@
+import os
+
 import torch
 import timm
 from pytorchcv.model_provider import get_model as ptcv_get_model
+from pytorchcv.models.model_store import get_model_file
 
 from ..ofa.model_zoo import ofa_flops_595m_s
 from ..tresnet import TResnetM, TResnetL
@@ -13,8 +16,10 @@ def load_model_weights(model, model_path):
         if 'num_batches_tracked' in key:
             continue
         p = model.state_dict()[key]
-        if key in state['state_dict']:
-            ip = state['state_dict'][key]
+        if 'state_dict' in state:
+            state = state['state_dict']
+        if key in state:
+            ip = state[key]
             if p.shape == ip.shape:
                 p.data.copy_(ip.data)  # Copy the data of parameters
             else:
@@ -49,7 +54,10 @@ def create_model(args):
     elif args.model_name == 'mobilenetv3_large_100':
         model = timm.create_model('mobilenetv3_large_100', pretrained=False, num_classes=args.num_classes)
     elif args.model_name == 'mobilenetv2_w1':
-        model = ptcv_get_model('mobilenetv2_w1', pretrained=False, num_classes=args.num_classes)
+        model = ptcv_get_model(args.model_name, pretrained=False, num_classes=args.num_classes)
+        file_path = get_model_file(model_name=args.model_name,
+                                   local_model_store_dir_path=os.path.join("~", ".torch", "models"))
+        model = load_model_weights(model, file_path)
     else:
         print("model: {} not found !!".format(args.model_name))
         exit(-1)
