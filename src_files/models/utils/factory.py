@@ -55,8 +55,10 @@ def create_model(args):
         model = timm.create_model('mobilenetv3_large_100', pretrained=False, num_classes=args.num_classes)
     elif args.model_name == 'mobilenetv2_w1':
         model = ptcv_get_model(args.model_name, pretrained=False, num_classes=args.num_classes)
+        storage_path = os.path.join(os.getenv('MODELS_ROOT'), ".torch", "models") if os.getenv('MODELS_ROOT') else \
+            os.path.join("~", ".torch", "models")
         file_path = get_model_file(model_name=args.model_name,
-                                   local_model_store_dir_path=os.path.join("~", ".torch", "models"))
+                                   local_model_store_dir_path=storage_path)
         model = load_model_weights(model, file_path)
     else:
         print("model: {} not found !!".format(args.model_name))
