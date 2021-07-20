@@ -5,6 +5,7 @@
 # Written by Tal Ridnik
 # --------------------------------------------------------
 
+import os.path as osp
 import argparse
 import time
 import torch
@@ -14,7 +15,7 @@ import torch.utils.data.distributed
 from torch.optim import lr_scheduler
 
 from src_files.data_loading.data_loader import create_data_loaders
-from src_files.helper_functions.distributed import print_at_master, to_ddp, num_distrib, setup_distrib
+from src_files.helper_functions.distributed import print_at_master, to_ddp, num_distrib, setup_distrib, is_master
 from src_files.helper_functions.general_helper_functions import silence_PIL_warnings
 from src_files.models import create_model
 from torch.cuda.amp import GradScaler, autocast
@@ -37,6 +38,7 @@ parser.add_argument('--weight_decay', default=1e-4, type=float)
 parser.add_argument("--local_rank", default=0, type=int)
 parser.add_argument("--label_smooth", default=0.2, type=float)
 parser.add_argument("--tree_path", default='./resources/imagenet21k_miil_tree.pth', type=str)
+parser.add_argument("--work_dir", default='./tmp', type=str)
 
 
 def main():
@@ -95,6 +97,10 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
             scheduler.step()
 
         epoch_time = time.time() - epoch_start_time
+        if is_master():
+            path = osp.join(args.work_dir, args.model_name + '.pth')
+            torch.save(model.state_dict(), path)
+            print('Checkpoint saved to ' + path)
         print_at_master(
             "\nFinished Epoch, Training Rate: {:.1f} [img/sec]".format(len(train_loader) *
                                                                       args.batch_size / epoch_time * max(num_distrib(),
