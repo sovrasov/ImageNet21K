@@ -95,6 +95,8 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
             scaler.step(optimizer)
             scaler.update()
             scheduler.step()
+            if i % 1000 == 0:
+                print_at_master(f'Iteration: {i}, loss: {loss.item()}')
 
         epoch_time = time.time() - epoch_start_time
         if is_master():
