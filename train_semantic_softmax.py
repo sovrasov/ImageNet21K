@@ -109,7 +109,7 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
 
         epoch_time = time.time() - epoch_start_time
         if is_master():
-            path = osp.join(args.work_dir, args.model_name + '.pth')
+            path = osp.join(args.work_dir, args.model_name + '_' + str(i) + '.pth')
             torch.save(model.state_dict(), path)
             print('Checkpoint saved to ' + path)
             writer.add_scalar('Val/semantic_top1', met.value(), epoch)
