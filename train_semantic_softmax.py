@@ -13,6 +13,7 @@ import torch.nn.parallel
 import torch.optim
 import torch.utils.data.distributed
 from torch.optim import lr_scheduler
+from torch.utils.tensorboard import SummaryWriter
 
 from src_files.data_loading.data_loader import create_data_loaders
 from src_files.helper_functions.distributed import print_at_master, to_ddp, num_distrib, setup_distrib, is_master
@@ -45,6 +46,12 @@ def main():
     # arguments
     args = parser.parse_args()
 
+    if is_master():
+        writer = SummaryWriter(args.work_dir)
+    else:
+        writer = None
+
+
     # EXIF warning silent
     silence_PIL_warnings()
 
@@ -66,10 +73,10 @@ def main():
     semantic_met = AccuracySemanticSoftmaxMet(semantic_softmax_processor)
 
     # Actuall Training
-    train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_processor, semantic_met, args)
+    train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_processor, semantic_met, args, writer)
 
 
-def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_processor, met, args):
+def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_processor, met, args, writer):
     # set loss
     loss_fn = SemanticSoftmaxLoss(semantic_softmax_processor)
 
@@ -95,14 +102,18 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
             scaler.step(optimizer)
             scaler.update()
             scheduler.step()
-            if i % 1000 == 0:
-                print_at_master(f'Iteration: {i}, loss: {loss.item()}')
+            if i % 1000 == 0 and is_master():
+                iter = epoch*len(train_loader) + i
+                writer.add_scalar('Loss/train', loss.item(), iter)
+                print(f'Iteration: {i}, loss: {loss.item()}')
 
         epoch_time = time.time() - epoch_start_time
         if is_master():
             path = osp.join(args.work_dir, args.model_name + '.pth')
             torch.save(model.state_dict(), path)
             print('Checkpoint saved to ' + path)
+            writer.add_scalar('Val/semantic_top1', met.value(), epoch)
+
         print_at_master(
             "\nFinished Epoch, Training Rate: {:.1f} [img/sec]".format(len(train_loader) *
                                                                       args.batch_size / epoch_time * max(num_distrib(),
