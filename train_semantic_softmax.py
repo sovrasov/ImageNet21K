@@ -46,17 +46,16 @@ def main():
     # arguments
     args = parser.parse_args()
 
-    if is_master():
-        writer = SummaryWriter(args.work_dir)
-    else:
-        writer = None
-
-
     # EXIF warning silent
     silence_PIL_warnings()
 
     # setup distributed
     setup_distrib(args)
+
+    if is_master():
+        writer = SummaryWriter(args.work_dir)
+    else:
+        writer = None
 
     # Setup model
     model = create_model(args).cuda()
