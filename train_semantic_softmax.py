@@ -101,12 +101,10 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
             scaler.step(optimizer)
             scaler.update()
             scheduler.step()
-            if is_master():
+            if i % 1000 == 0 and is_master():
                 iter = epoch*len(train_loader) + i
                 writer.add_scalar('Loss/train', loss.item(), iter)
                 print(f'Iteration: {i}, loss: {loss.item()}')
-            if i > 2:
-                break
 
         epoch_time = time.time() - epoch_start_time
 
@@ -121,8 +119,7 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
             path = osp.join(args.work_dir, args.model_name + '_' + str(epoch) + '.pth')
             torch.save(model.state_dict(), path)
             print('Checkpoint saved to ' + path)
-            writer.add_scalar('Val/semantic_top1', met.value(), epoch)
-            print('Val/semantic_top1', met.value())
+            writer.add_scalar('Val/semantic_top1', met.value, epoch)
 
 
 def validate_21k(val_loader, model, met):
