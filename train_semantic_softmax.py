@@ -120,6 +120,7 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
             torch.save(model.state_dict(), path)
             print('Checkpoint saved to ' + path)
             writer.add_scalar('Val/semantic_top1', met.value, epoch)
+            writer.add_scalar('Train/lr', scheduler.get_last_lr(), epoch)
 
 
 def validate_21k(val_loader, model, met):
