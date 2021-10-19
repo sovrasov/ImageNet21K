@@ -4,6 +4,9 @@ import torch
 import timm
 from pytorchcv.model_provider import get_model as ptcv_get_model
 from pytorchcv.models.model_store import get_model_file
+from torchreid.models import build_model
+from scripts.default_config import model_kwargs as get_model_kwargs
+from scripts.default_config import get_default_config
 
 from ..ofa.model_zoo import ofa_flops_595m_s
 from ..tresnet import TResnetM, TResnetL
@@ -27,6 +30,17 @@ def load_model_weights(model, model_path):
                     'could not load layer: {}, mismatch shape {} ,{}'.format(key, (p.shape), (ip.shape)))
         else:
             print_at_master('could not load layer: {}, not in checkpoint'.format(key))
+    return model
+
+def get_torchreid_model(name, num_classes):
+    config = get_default_config()
+    config.model.name = name
+    config.model.type = 'classification'
+    config.model.pretrained = True
+
+    model = build_model(**get_model_kwargs(config, num_classes))
+    model.loss = 'softmax'
+
     return model
 
 
@@ -60,6 +74,14 @@ def create_model(args):
         file_path = get_model_file(model_name=args.model_name,
                                    local_model_store_dir_path=storage_path)
         model = load_model_weights(model, file_path)
+    elif args.model_name == 'torchreid_mobilenetv3_large_1':
+        model = get_torchreid_model('mobilenetv3_large')
+    elif args.model_name == 'torchreid_mobilenetv3_large_075':
+        model = get_torchreid_model('mobilenetv3_large_075')
+    elif args.model_name == 'torchreid_mobilenetv3_small':
+        model = get_torchreid_model('mobilenetv3_small')
+    elif args.model_name == 'torchreid_efficientnet_b0':
+        model = get_torchreid_model('efficientnet_b0')
     else:
         print("model: {} not found !!".format(args.model_name))
         exit(-1)

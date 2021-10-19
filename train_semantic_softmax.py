@@ -95,6 +95,8 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
         for i, (input, target) in enumerate(train_loader):
             with autocast():  # mixed precision
                 output = model(input)
+                if isinstance(output, list):
+                    output = output[0]
                 loss = loss_fn(output, target) # note - loss also in fp16
             model.zero_grad()
             scaler.scale(loss).backward()
@@ -110,7 +112,7 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
 
         print_at_master(
             "\nFinished Epoch, Training Rate: {:.1f} [img/sec]".format(len(train_loader) *
-                                                                      args.batch_size / epoch_time * max(num_distrib(),
+                                                                       args.batch_size / epoch_time * max(num_distrib(),
                                                                                                          1)))
 
         # validation epoch
