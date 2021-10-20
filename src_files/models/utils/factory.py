@@ -34,6 +34,7 @@ def load_model_weights(model, model_path):
 
 def get_torchreid_model(name, num_classes):
     config = get_default_config()
+    config.use_gpu = True
     config.model.name = name
     config.model.type = 'classification'
     config.model.pretrained = True
@@ -75,13 +76,13 @@ def create_model(args):
                                    local_model_store_dir_path=storage_path)
         model = load_model_weights(model, file_path)
     elif args.model_name == 'torchreid_mobilenetv3_large_1':
-        model = get_torchreid_model('mobilenetv3_large')
+        model = get_torchreid_model('mobilenetv3_large', args.num_classes)
     elif args.model_name == 'torchreid_mobilenetv3_large_075':
-        model = get_torchreid_model('mobilenetv3_large_075')
+        model = get_torchreid_model('mobilenetv3_large_075', args.num_classes)
     elif args.model_name == 'torchreid_mobilenetv3_small':
-        model = get_torchreid_model('mobilenetv3_small')
+        model = get_torchreid_model('mobilenetv3_small', args.num_classes)
     elif args.model_name == 'torchreid_efficientnet_b0':
-        model = get_torchreid_model('efficientnet_b0')
+        model = get_torchreid_model('efficientnet_b0', args.num_classes)
     else:
         print("model: {} not found !!".format(args.model_name))
         exit(-1)
