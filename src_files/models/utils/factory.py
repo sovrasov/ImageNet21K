@@ -37,7 +37,8 @@ def get_torchreid_model(name, num_classes):
     config.use_gpu = True
     config.model.name = name
     config.model.type = 'classification'
-    config.model.pretrained = True
+    if not 'efficientnet_b0' in name:
+        config.model.pretrained = True
 
     model = build_model(**get_model_kwargs(config, num_classes))
     model.loss = 'softmax'
