@@ -114,13 +114,14 @@ def train_21k(model, train_loader, val_loader, optimizer, semantic_softmax_proce
             "\nFinished Epoch, Training Rate: {:.1f} [img/sec]".format(len(train_loader) *
                                                                        args.batch_size / epoch_time * max(num_distrib(),
                                                                                                          1)))
-
-        # validation epoch
-        validate_21k(val_loader, model, met)
         if is_master():
             path = osp.join(args.work_dir, args.model_name + '_' + str(epoch) + '.pth')
             torch.save(model.state_dict(), path)
             print('Checkpoint saved to ' + path)
+
+        # validation epoch
+        validate_21k(val_loader, model, met)
+        if is_master():
             writer.add_scalar('Val/semantic_top1', met.value, epoch)
             writer.add_scalar('Train/lr', scheduler.get_last_lr(), epoch)
 
@@ -133,7 +134,10 @@ def validate_21k(val_loader, model, met):
         for i, (input, target) in enumerate(val_loader):
             # mixed precision
             with autocast():
-                logits = model(input).float()
+                logits = model(input)
+                if isinstance(logits, list):
+                    logits = logits[0]
+                logits = logits.float()
 
             # measure accuracy and record loss
             met.accumulate(logits, target)
